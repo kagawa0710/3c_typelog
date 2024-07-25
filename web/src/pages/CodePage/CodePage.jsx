@@ -247,8 +247,9 @@ const CodePage = () => {
           >
             <MenuItem value={0.5}>0.5x</MenuItem>
             <MenuItem value={1}>1x</MenuItem>
-            <MenuItem value={1.5}>1.5x</MenuItem>
             <MenuItem value={2}>2x</MenuItem>
+            <MenuItem value={3}>3x</MenuItem>
+            <MenuItem value={5}>5x</MenuItem>
           </Select>
         </FormControl>
         <TextField
