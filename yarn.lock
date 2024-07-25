@@ -1703,16 +1703,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.21.0, @babel/runtime@npm:^7.23.2, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.9.2":
-  version: 7.24.7
-  resolution: "@babel/runtime@npm:7.24.7"
-  dependencies:
-    regenerator-runtime: "npm:^0.14.0"
-  checksum: b6fa3ec61a53402f3c1d75f4d808f48b35e0dfae0ec8e2bb5c6fc79fb95935da75766e0ca534d0f1c84871f6ae0d2ebdd950727cfadb745a2cdbef13faef5513
-  languageName: node
-  linkType: hard
-
-"@babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.23.9, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.21.0, @babel/runtime@npm:^7.23.2, @babel/runtime@npm:^7.23.9, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7, @babel/runtime@npm:^7.9.2":
   version: 7.24.8
   resolution: "@babel/runtime@npm:7.24.8"
   dependencies:
@@ -4852,6 +4843,25 @@ __metadata:
     graphql: "npm:16.8.1"
     typescript: "npm:5.4.5"
   checksum: d188c94c610420a38d5431e79a1023657e3d20df1fa6d3d6cc413ff59f85f30c9270858a33999309200b9ac3164f749e365ede38da77c9947f835e6d19a3ec88
+  languageName: node
+  linkType: hard
+
+"@redwoodjs/cli-data-migrate@npm:7.7.3":
+  version: 7.7.3
+  resolution: "@redwoodjs/cli-data-migrate@npm:7.7.3"
+  dependencies:
+    "@redwoodjs/babel-config": 7.7.3
+    "@redwoodjs/project-config": 7.7.3
+    chalk: 4.1.2
+    dotenv-defaults: 5.0.2
+    execa: 5.1.1
+    fs-extra: 11.2.0
+    listr2: 6.6.1
+    terminal-link: 2.1.1
+    yargs: 17.7.2
+  bin:
+    up: dist/bin.js
+  checksum: 56706441f8c894ef772aa134014dcd46046103227bb3011e23952f2d061aebeb1d5d88409625b526262d4158b55d2674ad742f8cb2d6b4405434c5edab7137c1
   languageName: node
   linkType: hard
 
@@ -18420,6 +18430,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
+    "@redwoodjs/cli-data-migrate": 7.7.3
     "@redwoodjs/core": 7.7.3
     "@redwoodjs/project-config": 7.7.3
   languageName: unknown
