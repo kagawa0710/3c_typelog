@@ -2,6 +2,7 @@
   "build": {
     "env": {
       "ENABLE_EXPERIMENTAL_COREPACK": "1"
-    }
+    },
+    "installCommand": "yarn install --frozen-lockfile"
   }
 }
