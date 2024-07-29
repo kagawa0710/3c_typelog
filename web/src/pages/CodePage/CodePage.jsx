@@ -39,7 +39,7 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
 }))
 
 const LineNumbers = styled('div')(({ theme }) => ({
-  padding: '10px',
+  paddingTop: '7px',
   borderRight: `1px solid ${theme.palette.grey[400]}`,
   userSelect: 'none',
   textAlign: 'right',
@@ -48,7 +48,7 @@ const LineNumbers = styled('div')(({ theme }) => ({
 }))
 
 const HighlightedLineNumber = styled('div')(({ theme }) => ({
-  padding: '10px',
+  padding: '7px',
   borderRight: `1px solid ${theme.palette.grey[400]}`,
   userSelect: 'none',
   textAlign: 'right',
@@ -109,16 +109,12 @@ const CodePage = () => {
 
   const handleInput = (value) => {
     const currentTime = Date.now()
-    const lastLog = inputLog[inputLog.length - 1]
-    const timeTaken = lastLog ? currentTime - lastLog.timestamp : 0
     setCode(value)
     setInputLog((prevInputLog) => [
       ...prevInputLog,
       {
-        type: 'input',
-        key: value,
+        value,
         timestamp: currentTime,
-        timeTaken,
       },
     ])
   }
@@ -131,17 +127,28 @@ const CodePage = () => {
     setReplayCode('')
     setIsReplaying(true)
     let index = 0
-    const replayInterval = setInterval(() => {
+    let lastTimestamp = inputLog[0]?.timestamp || 0
+
+    const replayNextChar = () => {
       if (index >= inputLog.length) {
-        clearInterval(replayInterval)
         setIsReplaying(false)
         return
       }
+
       const event = inputLog[index]
-      setReplayCode(event.key)
+      setReplayCode(event.value)
+
       index++
-    }, 1000 / playbackSpeed)
-    replayTimerRef.current = replayInterval
+      if (index < inputLog.length) {
+        const nextEvent = inputLog[index]
+        const delay = (nextEvent.timestamp - event.timestamp) / playbackSpeed
+        setTimeout(replayNextChar, delay)
+      } else {
+        setIsReplaying(false)
+      }
+    }
+
+    replayNextChar()
   }
 
   const handleReplayStop = () => {
@@ -155,6 +162,18 @@ const CodePage = () => {
 
   const handleThresholdChange = (event) => {
     setHighlightThreshold(event.target.value)
+  }
+
+  const handleDownloadJson = () => {
+    const blob = new Blob([JSON.stringify(inputLog, null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'inputLog.json'
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   useEffect(() => {
@@ -231,6 +250,9 @@ const CodePage = () => {
             onClick={() => setHighlightLines((prev) => !prev)}
           >
             ハイライト{highlightLines ? '解除' : '適用'}
+          </Button>
+          <Button variant="contained" color="info" onClick={handleDownloadJson}>
+            JSONダウンロード
           </Button>
         </ButtonContainer>
         <Typography variant="h6" mt={2}>

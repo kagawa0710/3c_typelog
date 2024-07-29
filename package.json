@@ -15,11 +15,7 @@
     "extends": "@redwoodjs/eslint-config",
     "root": true
   },
-  "engines": {
-    "node": "=20.x"
-  },
   "prisma": {
     "seed": "yarn rw exec seed"
-  },
-  "packageManager": "yarn@4.3.0"
+  }
 }
