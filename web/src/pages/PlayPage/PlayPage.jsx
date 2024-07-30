@@ -41,16 +41,10 @@ const LineNumbers = styled('div')(({ theme, pad }) => ({
     20 + pad * 8
   }px, #FFF 100%)`,
   opacity: 1,
-}))
-
-const HighlightedLineNumber = styled('div')(({ theme }) => ({
-  padding: '7px',
-  borderRight: `1px solid ${theme.palette.grey[400]}`,
-  userSelect: 'none',
-  textAlign: 'right',
-  paddingRight: '10px',
-  backgroundColor: theme.palette.error.main,
-  color: theme.palette.error.contrastText,
+  '& .highlighted': {
+    backgroundColor: theme.palette.error.main,
+    color: theme.palette.error.contrastText,
+  },
 }))
 
 const PlayPage = () => {
@@ -58,7 +52,8 @@ const PlayPage = () => {
   const [replayCode, setReplayCode] = useState('')
   const [isReplaying, setIsReplaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
-  const [timeLeft, setTimeLeft] = useState(0) // 初期値は0
+  const [timeLeft, setTimeLeft] = useState(0)
+  const [timeThreshold, setTimeThreshold] = useState(1000) // デフォルト1秒
   const replayTimerRef = useRef(null)
   const countdownTimerRef = useRef(null)
 
@@ -154,20 +149,32 @@ const PlayPage = () => {
 
   const getHighlightedLineNumbers = () => {
     const highlightedLines = new Set()
-    inputLog.forEach((log, index) => {
-      if (log.timeTaken > 3000) {
-        highlightedLines.add(index + 1)
+    for (let i = 1; i < inputLog.length; i++) {
+      const timeDiff = inputLog[i].timestamp - inputLog[i - 1].timestamp
+      if (timeDiff > timeThreshold) {
+        highlightedLines.add(i)
       }
-    })
+    }
     return highlightedLines
   }
 
   const highlightedLines = getHighlightedLineNumbers()
 
-  const initialValue = replayCode
-  const lines = (initialValue.match(/\n/g) || []).length + 1
-  const pad = String(lines).length
-  const lineNos = [...Array(lines).keys()].slice(1).join('\n')
+  const renderLineNumbers = (lines) => {
+    return lines.split('\n').map((line, index) => (
+      <span
+        key={index}
+        className={highlightedLines.has(index + 1) ? 'highlighted' : ''}
+      >
+        {index + 1}
+        {'\n'}
+      </span>
+    ))
+  }
+
+  const handleThresholdChange = (event, newValue) => {
+    setTimeThreshold(newValue)
+  }
 
   useEffect(() => {
     return () => {
@@ -193,12 +200,12 @@ const PlayPage = () => {
           type="file"
           accept="application/json"
           onChange={handleFileUpload}
-        />
-        <StyledEditorWrapper pad={pad}>
-          <LineNumbers pad={pad}>{lineNos}</LineNumbers>
+        />{' '}
+        <StyledEditorWrapper>
+          <LineNumbers>{renderLineNumbers(replayCode)}</LineNumbers>
           <Editor
             value={replayCode}
-            onValueChange={() => {}} // 読み取り専用のため空の関数
+            onValueChange={() => {}}
             highlight={(code) =>
               Prism.highlight(code, Prism.languages.javascript, 'javascript')
             }
@@ -208,7 +215,6 @@ const PlayPage = () => {
               fontSize: 16,
               flexGrow: 1,
               minHeight: '200px',
-              marginLeft: `${20 + pad * 8}px`,
               border: `1px solid ${isReplaying ? 'red' : '#ccc'}`,
               backgroundColor: isReplaying ? '#f0f0f0' : 'transparent',
               lineHeight: '1.5em',
@@ -227,6 +233,18 @@ const PlayPage = () => {
             min={0.5}
             max={5}
             step={0.1}
+            marks
+            valueLabelDisplay="auto"
+          />
+        </Box>
+        <Box sx={{ width: 300, mt: 2 }}>
+          <Typography gutterBottom>時間閾値: {timeThreshold}ms</Typography>
+          <Slider
+            value={timeThreshold}
+            onChange={handleThresholdChange}
+            min={100}
+            max={5000}
+            step={100}
             marks
             valueLabelDisplay="auto"
           />

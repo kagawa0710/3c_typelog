@@ -140,10 +140,6 @@ const CodePage = () => {
 
   const highlightedLines = getHighlightedLineNumbers()
 
-  const handleReplayRedirect = () => {
-    navigate('/play')
-  }
-
   const lines = code.split('\n').length
 
   return (
@@ -191,7 +187,7 @@ const CodePage = () => {
           <Button
             variant="contained"
             color="success"
-            onClick={handleReplayRedirect}
+            onClick={() => (window.location.href = '/play')}
           >
             jsonファイルから再生してみる
           </Button>
