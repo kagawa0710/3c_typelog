@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
+
 import { Button, Box, Typography, Slider } from '@mui/material'
 import { styled } from '@mui/system'
 import Prism from 'prismjs'
 import Editor from 'react-simple-code-editor'
+
 import 'prismjs/themes/prism.css'
 import { Metadata } from '@redwoodjs/web'
 
@@ -10,10 +12,10 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
   width: '90%',
   margin: '10px auto',
   display: 'flex',
-  flexDirection: 'row',
+  position: 'relative', // 追加: 行番号を相対位置で配置するため
   borderRadius: '4px',
   border: `1px solid ${theme.palette.grey[400]}`,
-  fontFamily: '"Fira code", "Fira Mono", monospace',
+  fontFamily: '"Inconsolata", "Fira code", "Fira Mono", monospace', // "Inconsolata"フォントを追加
   fontSize: '16px',
   '& pre': {
     margin: 0,
@@ -24,18 +26,29 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
   overflow: 'auto',
 }))
 
-const LineNumbers = styled('div')(({ theme }) => ({
-  padding: '10px 0 10px 10px',
+const LineNumbers = styled('div')(({ theme, pad }) => ({
+  fontFamily: 'Inconsolata, monospace',
+  paddingTop: '10px',
+  paddingRight: '10px',
+  textAlign: 'right',
+  position: 'absolute',
+  left: 0,
+  top: 0,
+  bottom: 0,
+  whiteSpace: 'pre',
+  userSelect: 'none',
+  background: `linear-gradient(90deg, #EDF2F7 ${20 + pad * 8}px, ${
+    20 + pad * 8
+  }px, #FFF 100%)`,
+  opacity: 1,
+}))
+
+const HighlightedLineNumber = styled('div')(({ theme }) => ({
+  padding: '7px',
   borderRight: `1px solid ${theme.palette.grey[400]}`,
   userSelect: 'none',
   textAlign: 'right',
   paddingRight: '10px',
-  lineHeight: '1.5em',
-  fontSize: '16px',
-  color: theme.palette.text.secondary,
-}))
-
-const HighlightedLineNumber = styled(LineNumbers)(({ theme }) => ({
   backgroundColor: theme.palette.error.main,
   color: theme.palette.error.contrastText,
 }))
@@ -45,7 +58,9 @@ const PlayPage = () => {
   const [replayCode, setReplayCode] = useState('')
   const [isReplaying, setIsReplaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [timeLeft, setTimeLeft] = useState(0) // 初期値は0
   const replayTimerRef = useRef(null)
+  const countdownTimerRef = useRef(null)
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0]
@@ -56,6 +71,9 @@ const PlayPage = () => {
         const json = JSON.parse(e.target.result)
         if (validateJsonFormat(json)) {
           setInputLog(json)
+          const startTime = json[0].timestamp
+          const endTime = json[json.length - 1].timestamp
+          setTimeLeft((endTime - startTime) / 1000) // 秒単位に変換
           alert('JSON file is valid and loaded successfully.')
         } else {
           alert('Invalid JSON format.')
@@ -75,11 +93,14 @@ const PlayPage = () => {
   const handleReplay = () => {
     setReplayCode('')
     setIsReplaying(true)
+    startCountdownTimer()
     let index = 0
 
     const replayNextChar = () => {
       if (index >= inputLog.length) {
         setIsReplaying(false)
+        clearTimeout(replayTimerRef.current)
+        clearInterval(countdownTimerRef.current)
         return
       }
 
@@ -93,6 +114,7 @@ const PlayPage = () => {
         replayTimerRef.current = setTimeout(replayNextChar, delay)
       } else {
         setIsReplaying(false)
+        clearInterval(countdownTimerRef.current)
       }
     }
 
@@ -101,12 +123,33 @@ const PlayPage = () => {
 
   const handleReplayStop = () => {
     clearTimeout(replayTimerRef.current)
+    clearInterval(countdownTimerRef.current)
     replayTimerRef.current = null
     setIsReplaying(false)
   }
 
   const handleSpeedChange = (event, newValue) => {
     setPlaybackSpeed(newValue)
+    if (isReplaying) {
+      clearInterval(countdownTimerRef.current)
+      startCountdownTimer()
+    }
+  }
+
+  const startCountdownTimer = () => {
+    clearInterval(countdownTimerRef.current)
+    const totalReplayTime =
+      (inputLog[inputLog.length - 1].timestamp - inputLog[0].timestamp) / 1000
+    let timeRemaining = totalReplayTime / playbackSpeed
+    countdownTimerRef.current = setInterval(() => {
+      setTimeLeft(timeRemaining)
+      if (timeRemaining <= 1) {
+        clearInterval(countdownTimerRef.current)
+        handleReplayStop() // タイマーが0になったら再生も停止
+        return
+      }
+      timeRemaining -= 1 / playbackSpeed // 再生速度に応じて減少速度を調整
+    }, 1000 / playbackSpeed)
   }
 
   const getHighlightedLineNumbers = () => {
@@ -121,9 +164,15 @@ const PlayPage = () => {
 
   const highlightedLines = getHighlightedLineNumbers()
 
+  const initialValue = replayCode
+  const lines = (initialValue.match(/\n/g) || []).length + 1
+  const pad = String(lines).length
+  const lineNos = [...Array(lines).keys()].slice(1).join('\n')
+
   useEffect(() => {
     return () => {
       clearTimeout(replayTimerRef.current)
+      clearInterval(countdownTimerRef.current)
     }
   }, [])
 
@@ -145,7 +194,8 @@ const PlayPage = () => {
           accept="application/json"
           onChange={handleFileUpload}
         />
-        <StyledEditorWrapper>
+        <StyledEditorWrapper pad={pad}>
+          <LineNumbers pad={pad}>{lineNos}</LineNumbers>
           <Editor
             value={replayCode}
             onValueChange={() => {}} // 読み取り専用のため空の関数
@@ -154,10 +204,11 @@ const PlayPage = () => {
             }
             padding={10}
             style={{
-              fontFamily: '"Fira code", "Fira Mono", monospace',
+              fontFamily: 'Inconsolata, monospace',
               fontSize: 16,
               flexGrow: 1,
               minHeight: '200px',
+              marginLeft: `${20 + pad * 8}px`,
               border: `1px solid ${isReplaying ? 'red' : '#ccc'}`,
               backgroundColor: isReplaying ? '#f0f0f0' : 'transparent',
               lineHeight: '1.5em',
@@ -167,30 +218,22 @@ const PlayPage = () => {
             textareaId="codeArea"
             preClassName="language-javascript"
           />
-          <div>
-            {replayCode
-              .split('\n')
-              .map((_, i) =>
-                highlightedLines.has(i + 1) ? (
-                  <HighlightedLineNumber key={i}>{i + 1}</HighlightedLineNumber>
-                ) : (
-                  <LineNumbers key={i}>{i + 1}</LineNumbers>
-                )
-              )}
-          </div>
         </StyledEditorWrapper>
         <Box sx={{ width: 300, mt: 2 }}>
           <Typography gutterBottom>再生速度: {playbackSpeed}x</Typography>
           <Slider
             value={playbackSpeed}
             onChange={handleSpeedChange}
-            min={2}
+            min={0.5}
             max={5}
             step={0.1}
             marks
             valueLabelDisplay="auto"
           />
         </Box>
+        <Typography variant="h6" mt={2}>
+          残り時間: {timeLeft.toFixed(1)}秒
+        </Typography>
         <Button
           variant="contained"
           color="success"

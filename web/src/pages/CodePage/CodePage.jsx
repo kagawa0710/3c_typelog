@@ -1,15 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-import {
-  Button,
-  Box,
-  Typography,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  TextField,
-} from '@mui/material'
+import { Button, Box, Typography } from '@mui/material'
 import { styled } from '@mui/system'
 import Prism from 'prismjs'
 import Editor from 'react-simple-code-editor'
@@ -34,24 +25,23 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
   },
   maxHeight: '300px',
   overflow: 'auto',
+  position: 'relative',
 }))
 
-const LineNumbers = styled('div')(({ theme }) => ({
-  paddingTop: '7px',
+const LineNumbers = styled('div')(({ theme, lines }) => ({
+  fontFamily: 'Fira code, Fira Mono, monospace',
+  fontSize: '16px',
+  lineHeight: '1.5',
+  padding: '10px 0 10px 10px',
   borderRight: `1px solid ${theme.palette.grey[400]}`,
   userSelect: 'none',
   textAlign: 'right',
-  paddingRight: '10px',
-}))
-
-const HighlightedLineNumber = styled('div')(({ theme }) => ({
-  padding: '7px',
-  borderRight: `1px solid ${theme.palette.grey[400]}`,
-  userSelect: 'none',
-  textAlign: 'right',
-  paddingRight: '10px',
-  backgroundColor: theme.palette.error.main,
-  color: theme.palette.error.contrastText,
+  color: theme.palette.text.secondary,
+  position: 'absolute',
+  left: 0,
+  top: 0,
+  bottom: 0,
+  width: `${String(lines).length + 2}ch`,
 }))
 
 const ButtonContainer = styled(Box)(({ theme }) => ({
@@ -63,7 +53,7 @@ const ButtonContainer = styled(Box)(({ theme }) => ({
 const CodePage = () => {
   const [inputLog, setInputLog] = useState([])
   const [startTime, setStartTime] = useState(null)
-  const [timeLeft, setTimeLeft] = useState(180)
+  const [timeLeft, setTimeLeft] = useState(360)
   const [code, setCode] = useState('')
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [highlightThreshold, setHighlightThreshold] = useState(3000)
@@ -74,12 +64,13 @@ const CodePage = () => {
     setCode('')
     setInputLog([])
     setStartTime(Date.now())
-    setTimeLeft(180)
+    setTimeLeft(360)
 
     const interval = setInterval(() => {
       setTimeLeft((prevTimeLeft) => {
         if (prevTimeLeft <= 1) {
           clearInterval(interval)
+          handleStop()
           return 0
         }
         return prevTimeLeft - 1
@@ -102,6 +93,13 @@ const CodePage = () => {
 
   const handleStop = () => {
     clearInterval(timerRef.current)
+    alert('制限時間になったか、終了ボタンが押されました！')
+    const shouldDownload = window.confirm(
+      '入力データのJSONファイルをダウンロードしますか？'
+    )
+    if (shouldDownload) {
+      handleDownloadJson()
+    }
   }
 
   const handleSpeedChange = (event) => {
@@ -146,6 +144,8 @@ const CodePage = () => {
     navigate('/play')
   }
 
+  const lines = code.split('\n').length
+
   return (
     <>
       <Metadata title="Test" description="Test page" />
@@ -159,18 +159,10 @@ const CodePage = () => {
         <Typography variant="h5" mt={2}>
           Input
         </Typography>
-        <StyledEditorWrapper>
-          <div>
-            {code
-              .split('\n')
-              .map((_, i) =>
-                highlightedLines.has(i + 1) && highlightLines ? (
-                  <HighlightedLineNumber key={i}>{i + 1}</HighlightedLineNumber>
-                ) : (
-                  <LineNumbers key={i}>{i + 1}</LineNumbers>
-                )
-              )}
-          </div>
+        <StyledEditorWrapper lines={lines}>
+          <LineNumbers lines={lines}>
+            {Array.from({ length: lines }, (_, i) => i + 1).join('\n')}
+          </LineNumbers>
           <Editor
             value={code}
             onValueChange={handleInput}
@@ -183,7 +175,8 @@ const CodePage = () => {
               fontSize: 16,
               flexGrow: 1,
               minHeight: '200px',
-              border: `1px solid #ccc`,
+              marginLeft: `${String(lines).length + 2}ch`,
+              border: 'none',
             }}
             placeholder="ここに入力"
           />
@@ -195,13 +188,10 @@ const CodePage = () => {
           <Button variant="contained" color="secondary" onClick={handleStop}>
             終了
           </Button>
-          <Button variant="contained" color="info" onClick={handleDownloadJson}>
-            JSONダウンロード
-          </Button>
           <Button
             variant="contained"
             color="success"
-            onClick={() => (window.location.href = '/play')}
+            onClick={handleReplayRedirect}
           >
             jsonファイルから再生してみる
           </Button>
