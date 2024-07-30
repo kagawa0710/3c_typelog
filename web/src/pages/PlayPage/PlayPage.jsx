@@ -1,11 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-
-import { Button, Box, Typography } from '@mui/material'
+import { Button, Box, Typography, Slider } from '@mui/material'
 import { styled } from '@mui/system'
 import Prism from 'prismjs'
 import Editor from 'react-simple-code-editor'
 import 'prismjs/themes/prism.css'
-
 import { Metadata } from '@redwoodjs/web'
 
 const StyledEditorWrapper = styled('div')(({ theme }) => ({
@@ -46,6 +44,7 @@ const PlayPage = () => {
   const [inputLog, setInputLog] = useState([])
   const [replayCode, setReplayCode] = useState('')
   const [isReplaying, setIsReplaying] = useState(false)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const replayTimerRef = useRef(null)
 
   const handleFileUpload = (event) => {
@@ -70,17 +69,7 @@ const PlayPage = () => {
   }
 
   const validateJsonFormat = (json) => {
-    return (
-      Array.isArray(json) &&
-      json.every(
-        (item) =>
-          typeof item === 'object' &&
-          'value' in item &&
-          'timestamp' in item &&
-          typeof item.value === 'string' &&
-          typeof item.timestamp === 'number'
-      )
-    )
+    return Array.isArray(json)
   }
 
   const handleReplay = () => {
@@ -100,8 +89,8 @@ const PlayPage = () => {
       index++
       if (index < inputLog.length) {
         const nextEvent = inputLog[index]
-        const delay = nextEvent.timestamp - event.timestamp
-        setTimeout(replayNextChar, delay)
+        const delay = (nextEvent.timestamp - event.timestamp) / playbackSpeed
+        replayTimerRef.current = setTimeout(replayNextChar, delay)
       } else {
         setIsReplaying(false)
       }
@@ -111,8 +100,13 @@ const PlayPage = () => {
   }
 
   const handleReplayStop = () => {
-    clearInterval(replayTimerRef.current)
+    clearTimeout(replayTimerRef.current)
+    replayTimerRef.current = null
     setIsReplaying(false)
+  }
+
+  const handleSpeedChange = (event, newValue) => {
+    setPlaybackSpeed(newValue)
   }
 
   const getHighlightedLineNumbers = () => {
@@ -129,7 +123,7 @@ const PlayPage = () => {
 
   useEffect(() => {
     return () => {
-      clearInterval(replayTimerRef.current)
+      clearTimeout(replayTimerRef.current)
     }
   }, [])
 
@@ -152,19 +146,9 @@ const PlayPage = () => {
           onChange={handleFileUpload}
         />
         <StyledEditorWrapper>
-          <div>
-            {replayCode
-              .split('\n')
-              .map((_, i) =>
-                highlightedLines.has(i + 1) ? (
-                  <HighlightedLineNumber key={i}>{i + 1}</HighlightedLineNumber>
-                ) : (
-                  <LineNumbers key={i}>{i + 1}</LineNumbers>
-                )
-              )}
-          </div>
           <Editor
             value={replayCode}
+            onValueChange={() => {}} // 読み取り専用のため空の関数
             highlight={(code) =>
               Prism.highlight(code, Prism.languages.javascript, 'javascript')
             }
@@ -180,8 +164,33 @@ const PlayPage = () => {
             }}
             readOnly
             placeholder="ここに再生"
+            textareaId="codeArea"
+            preClassName="language-javascript"
           />
+          <div>
+            {replayCode
+              .split('\n')
+              .map((_, i) =>
+                highlightedLines.has(i + 1) ? (
+                  <HighlightedLineNumber key={i}>{i + 1}</HighlightedLineNumber>
+                ) : (
+                  <LineNumbers key={i}>{i + 1}</LineNumbers>
+                )
+              )}
+          </div>
         </StyledEditorWrapper>
+        <Box sx={{ width: 300, mt: 2 }}>
+          <Typography gutterBottom>再生速度: {playbackSpeed}x</Typography>
+          <Slider
+            value={playbackSpeed}
+            onChange={handleSpeedChange}
+            min={2}
+            max={5}
+            step={0.1}
+            marks
+            valueLabelDisplay="auto"
+          />
+        </Box>
         <Button
           variant="contained"
           color="success"
