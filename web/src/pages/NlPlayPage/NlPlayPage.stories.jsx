@@ -1,7 +1,7 @@
-import TestPage from './TestPage'
+import NlPlayPage from './NlPlayPage'
 
 const meta = {
-  component: TestPage,
+  component: NlPlayPage,
 }
 
 export default meta
