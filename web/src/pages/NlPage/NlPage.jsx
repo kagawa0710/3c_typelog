@@ -28,21 +28,21 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
   position: 'relative',
 }))
 
-const LineNumbers = styled('div')(({ theme, lines }) => ({
-  fontFamily: 'Fira code, Fira Mono, monospace',
-  fontSize: '16px',
-  lineHeight: '1.5',
-  padding: '10px 0 10px 10px',
-  borderRight: `1px solid ${theme.palette.grey[400]}`,
-  userSelect: 'none',
-  textAlign: 'right',
-  color: theme.palette.text.secondary,
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  bottom: 0,
-  width: `${String(lines).length + 2}ch`,
-}))
+// const LineNumbers = styled('div')(({ theme, lines }) => ({
+//   fontFamily: 'Fira code, Fira Mono, monospace',
+//   fontSize: '16px',
+//   lineHeight: '1.5',
+//   padding: '10px 0 10px 10px',
+//   borderRight: `1px solid ${theme.palette.grey[400]}`,
+//   userSelect: 'none',
+//   textAlign: 'right',
+//   color: theme.palette.text.secondary,
+//   position: 'absolute',
+//   left: 0,
+//   top: 0,
+//   bottom: 0,
+//   width: `${String(lines).length + 2}ch`,
+// }))
 
 const ButtonContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -153,12 +153,12 @@ const NlPage = () => {
         minHeight="100vh"
       >
         <Typography variant="h5" mt={2}>
-          Input
+          お手紙（自然言語）
         </Typography>
         <StyledEditorWrapper lines={lines}>
-          <LineNumbers lines={lines}>
+          {/* <LineNumbers lines={lines}>
             {Array.from({ length: lines }, (_, i) => i + 1).join('\n')}
-          </LineNumbers>
+          </LineNumbers> */}
           <Editor
             value={code}
             onValueChange={handleInput}
