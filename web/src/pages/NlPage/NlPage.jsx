@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from 'react'//コンポーネント、ライフサイクル、DOM要素
+import { useState, useEffect, useRef } from 'react'
 
-import { Button, Box, Typography } from '@mui/material'//UIコンポーネント
-import { styled } from '@mui/system'//カスタムスタイル
-import Prism from 'prismjs'//コードのシンタクスハイライト
-import Editor from 'react-simple-code-editor'//コードエディターコンポーネント
+import { Button, Box, Typography } from '@mui/material'
+import { styled } from '@mui/system'
+import Prism from 'prismjs'
+import Editor from 'react-simple-code-editor'
 
-import 'prismjs/themes/prism.css'//シンタクスハイライトのデザイン
+import 'prismjs/themes/prism.css'
 import 'prismjs/components/prism-javascript'
 import { Metadata, navigate } from '@redwoodjs/web'
 
@@ -44,46 +44,46 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
 //   width: `${String(lines).length + 2}ch`,
 // }))
 
-const ButtonContainer = styled(Box)(({ theme }) => ({//Material UIのBoxコンポーネント　カスタム
+const ButtonContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(2),
   marginTop: theme.spacing(2),
 }))
 
 const NlPage = () => {
-  const [inputLog, setInputLog] = useState([])//入力に対するデータ、タイムスタンプ保持。inputlogの状態を更新
-  const [startTime, setStartTime] = useState(null)//入力が開始された時間を保持。更新
-  const [timeLeft, setTimeLeft] = useState(360)//デフォルトは360秒。更新
-  const [code, setCode] = useState('')//ユーザーが入力したコードを保持。更新
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)//再生速度を管理する値。更新
-  const [highlightThreshold, setHighlightThreshold] = useState(3000)//ハイライトをする基準時間を保持。更新
-  const [highlightLines, setHighlightLines] = useState(false)//ハイライトをする行を保持
-  const timerRef = useRef(null)//タイマー参照を保持
+  const [inputLog, setInputLog] = useState([])
+  const [startTime, setStartTime] = useState(null)
+  const [timeLeft, setTimeLeft] = useState(360)
+  const [code, setCode] = useState('')
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [highlightThreshold, setHighlightThreshold] = useState(3000)
+  const [highlightLines, setHighlightLines] = useState(false)
+  const timerRef = useRef(null)
 
-  const handleClick = () => {//開始ボタンが押された際に呼び出される
-    setCode('')//コードリセット
-    setInputLog([])//入力ログ
-    setStartTime(Date.now())//開始時間を現在に
-    setTimeLeft(360)//残り時間を360秒
+  const handleClick = () => {
+    setCode('')
+    setInputLog([])
+    setStartTime(Date.now())
+    setTimeLeft(360)
 
-    const interval = setInterval(() => {//1秒ごとに減少される①
-      setTimeLeft((prevTimeLeft) => {//残り時間を更新,prevTimeLeft=直前の時間
-        if (prevTimeLeft <= 1) {//残り1秒以下になったら終了
-          clearInterval(interval)//タイマー停止
-          handleStop()//タイマー終了時の処理
+    const interval = setInterval(() => {
+      setTimeLeft((prevTimeLeft) => {
+        if (prevTimeLeft <= 1) {
+          clearInterval(interval)
+          handleStop()
           return 0
         }
-        return prevTimeLeft - 1//時間がある場合、時間を減らす
+        return prevTimeLeft - 1
       })
-    }, 1000)//①
-    timerRef.current = interval//timeref(61行目)で保存
+    }, 1000)
+    timerRef.current = interval
   }
-//ここで文字の入力、削除など一定期間のデータを保存
-  const handleInput = (value) => {//入力時に書き込み、value(ユーザーが入力する値（テキスト、コード）)
-    const currentTime = Date.now()//現在の時間をミリ秒単位で取得
+
+  const handleInput = (value) => {
+    const currentTime = Date.now()
     setCode(value)
-    setInputLog((prevInputLog) => [//今まで記録されてきた配列状態を更新
-      ...prevInputLog,//今までの入力ログを配列に（入力、削除）
+    setInputLog((prevInputLog) => [
+      ...prevInputLog,
       {
         value,
         timestamp: currentTime,
@@ -92,25 +92,25 @@ const NlPage = () => {
   }
 
   const handleStop = () => {
-    clearInterval(timerRef.current)//動作中のタイマーを停止
+    clearInterval(timerRef.current)
     alert('制限時間になったか、終了ボタンが押されました！')
     const shouldDownload = window.confirm(
       '入力データのJSONファイルをダウンロードしますか？'
     )
-    if (shouldDownload) {//OKの場合、ダウンロード開始
+    if (shouldDownload) {
       handleDownloadJson()
     }
   }
 
-  const handleSpeedChange = (event) => {//再生速度変化
+  const handleSpeedChange = (event) => {
     setPlaybackSpeed(event.target.value)
   }
 
-  const handleThresholdChange = (event) => {//閾値変化
+  const handleThresholdChange = (event) => {
     setHighlightThreshold(event.target.value)
   }
 
-  const handleDownloadJson = () => {//ダウンロード（jsonファイル）
+  const handleDownloadJson = () => {
     const blob = new Blob([JSON.stringify(inputLog, null, 2)], {
       type: 'application/json',
     })
@@ -122,7 +122,7 @@ const NlPage = () => {
     URL.revokeObjectURL(url)
   }
 
-  useEffect(() => {//webページを開いてコンポーネントがあった場合（マウントする）、画面から取り除かれる際（アンマウント
+  useEffect(() => {
     return () => {
       clearInterval(timerRef.current)
     }
@@ -140,7 +140,7 @@ const NlPage = () => {
 
   //const highlightedLines = getHighlightedLineNumbers()//input.logを解析し、ハイライトする行数を特定
 
-  const lines = code.split('\n').length//文字列を分割する
+  const lines = code.split('\n').length
 
   return (
     <>
@@ -156,13 +156,11 @@ const NlPage = () => {
           （自然言語）
         </Typography>
         <StyledEditorWrapper lines={lines}>
-          {/* <LineNumbers lines={lines}>
-            {Array.from({ length: lines }, (_, i) => i + 1).join('\n')}
-          </LineNumbers> */}
+
           <Editor
             value={code}
             onValueChange={handleInput}
-            highlight={(code) => code} //（変更点：ハイライト
+            highlight={(code) => code}
 
             padding={10}
             style={{
