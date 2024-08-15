@@ -37,12 +37,12 @@ const NlPage = () => {
   const [timeLeft, setTimeLeft] = useState(360)
   const [code, setCode] = useState('')
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
-  const [run, setRun] = useState(false)
+  const [isRunning, setRun] = useState(false)
 
   const timerRef = useRef(null)
 
   const handleClick = () => {
-    if (run) return
+    if (isRunning) return
 
     setRun(true)
     setCode('')
@@ -141,7 +141,12 @@ const NlPage = () => {
           />
         </StyledEditorWrapper>
         <ButtonContainer>
-          <Button variant="contained" color="primary" onClick={handleClick} disabled={run}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleClick}
+            disabled={isRunning}
+          >
             開始
           </Button>
           <Button variant="contained" color="secondary" onClick={handleStop}>
