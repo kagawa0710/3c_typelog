@@ -2,11 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 
 import { Button, Box, Typography } from '@mui/material'
 import { styled } from '@mui/system'
-import Prism from 'prismjs'
 import Editor from 'react-simple-code-editor'
 
-import 'prismjs/themes/prism.css'
-import 'prismjs/components/prism-javascript'
 import { Metadata, navigate } from '@redwoodjs/web'
 
 const StyledEditorWrapper = styled('div')(({ theme }) => ({
@@ -28,22 +25,6 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
   position: 'relative',
 }))
 
-const LineNumbers = styled('div')(({ theme, lines }) => ({
-  fontFamily: 'Fira code, Fira Mono, monospace',
-  fontSize: '16px',
-  lineHeight: '1.5',
-  padding: '10px 0 10px 10px',
-  borderRight: `1px solid ${theme.palette.grey[400]}`,
-  userSelect: 'none',
-  textAlign: 'right',
-  color: theme.palette.text.secondary,
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  bottom: 0,
-  width: `${String(lines).length + 2}ch`,
-}))
-
 const ButtonContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(2),
@@ -56,11 +37,14 @@ const NlPage = () => {
   const [timeLeft, setTimeLeft] = useState(360)
   const [code, setCode] = useState('')
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
-  const [highlightThreshold, setHighlightThreshold] = useState(3000)
-  const [highlightLines, setHighlightLines] = useState(false)
+  const [isRunning, setRun] = useState(false)
+
   const timerRef = useRef(null)
 
   const handleClick = () => {
+    if (isRunning) return
+
+    setRun(true)
     setCode('')
     setInputLog([])
     setStartTime(Date.now())
@@ -92,6 +76,7 @@ const NlPage = () => {
   }
 
   const handleStop = () => {
+    setRun(false)
     clearInterval(timerRef.current)
     alert('制限時間になったか、終了ボタンが押されました！')
     const shouldDownload = window.confirm(
@@ -104,10 +89,6 @@ const NlPage = () => {
 
   const handleSpeedChange = (event) => {
     setPlaybackSpeed(event.target.value)
-  }
-
-  const handleThresholdChange = (event) => {
-    setHighlightThreshold(event.target.value)
   }
 
   const handleDownloadJson = () => {
@@ -127,19 +108,6 @@ const NlPage = () => {
       clearInterval(timerRef.current)
     }
   }, [])
-
-  const getHighlightedLineNumbers = () => {
-    const highlightedLines = new Set()
-    inputLog.forEach((log, index) => {
-      if (log.timeTaken > highlightThreshold && code.split('\n')[index]) {
-        highlightedLines.add(index + 1)
-      }
-    })
-    return highlightedLines
-  }
-
-  const highlightedLines = getHighlightedLineNumbers()
-
   const lines = code.split('\n').length
 
   return (
@@ -153,18 +121,13 @@ const NlPage = () => {
         minHeight="100vh"
       >
         <Typography variant="h5" mt={2}>
-          Input
+          （自然言語）
         </Typography>
         <StyledEditorWrapper lines={lines}>
-          <LineNumbers lines={lines}>
-            {Array.from({ length: lines }, (_, i) => i + 1).join('\n')}
-          </LineNumbers>
           <Editor
             value={code}
             onValueChange={handleInput}
-            highlight={(code) =>
-              Prism.highlight(code, Prism.languages.javascript, 'javascript')
-            }
+            highlight={(code) => code}
             padding={10}
             style={{
               fontFamily: '"Fira code", "Fira Mono", monospace',
@@ -178,7 +141,12 @@ const NlPage = () => {
           />
         </StyledEditorWrapper>
         <ButtonContainer>
-          <Button variant="contained" color="primary" onClick={handleClick}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleClick}
+            disabled={isRunning}
+          >
             開始
           </Button>
           <Button variant="contained" color="secondary" onClick={handleStop}>
