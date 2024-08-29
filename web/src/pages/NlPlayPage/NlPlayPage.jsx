@@ -2,49 +2,21 @@ import { useState, useRef, useEffect } from 'react'
 
 import { Button, Box, Typography, Slider } from '@mui/material'
 import { styled } from '@mui/system'
-import Prism from 'prismjs'
-import Editor from 'react-simple-code-editor'
 
-import 'prismjs/themes/prism.css'
 import { Metadata } from '@redwoodjs/web'
 
-const StyledEditorWrapper = styled('div')(({ theme }) => ({
+const StyledTextareaWrapper = styled('div')(({ theme }) => ({
   width: '90%',
   margin: '10px auto',
   display: 'flex',
-  position: 'relative', // 追加: 行番号を相対位置で配置するため
+  flexDirection: 'row',
   borderRadius: '4px',
   border: `1px solid ${theme.palette.grey[400]}`,
-  fontFamily: '"Inconsolata", "Fira code", "Fira Mono", monospace', // "Inconsolata"フォントを追加
+  fontFamily: '"Fira code", "Fira Mono", monospace',
   fontSize: '16px',
-  '& pre': {
-    margin: 0,
-    padding: '10px 0 10px 10px',
-    background: 'transparent',
-  },
   maxHeight: '300px',
   overflow: 'auto',
-}))
-
-const LineNumbers = styled('div')(({ theme, pad }) => ({
-  fontFamily: 'Inconsolata, monospace',
-  paddingTop: '10px',
-  paddingRight: '10px',
-  textAlign: 'right',
-  position: 'absolute',
-  left: 0,
-  top: 0,
-  bottom: 0,
-  whiteSpace: 'pre',
-  userSelect: 'none',
-  background: `linear-gradient(90deg, #EDF2F7 ${20 + pad * 8}px, ${
-    20 + pad * 8
-  }px, #FFF 100%)`,
-  opacity: 1,
-  '& .highlighted': {
-    backgroundColor: theme.palette.error.main,
-    color: theme.palette.error.contrastText,
-  },
+  position: 'relative',
 }))
 
 const NlPlayPage = () => {
@@ -53,7 +25,7 @@ const NlPlayPage = () => {
   const [isReplaying, setIsReplaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [timeLeft, setTimeLeft] = useState(0)
-  const [timeThreshold, setTimeThreshold] = useState(1000) // デフォルト1秒
+  const [timeThreshold, setTimeThreshold] = useState(1000)
   const replayTimerRef = useRef(null)
   const countdownTimerRef = useRef(null)
 
@@ -147,31 +119,6 @@ const NlPlayPage = () => {
     }, 1000 / playbackSpeed)
   }
 
-  const getHighlightedLineNumbers = () => {
-    const highlightedLines = new Set()
-    for (let i = 1; i < inputLog.length; i++) {
-      const timeDiff = inputLog[i].timestamp - inputLog[i - 1].timestamp
-      if (timeDiff > timeThreshold) {
-        highlightedLines.add(i)
-      }
-    }
-    return highlightedLines
-  }
-
-  const highlightedLines = getHighlightedLineNumbers()
-
-  const renderLineNumbers = (lines) => {
-    return lines.split('\n').map((line, index) => (
-      <span
-        key={index}
-        className={highlightedLines.has(index + 1) ? 'highlighted' : ''}
-      >
-        {index + 1}
-        {'\n'}
-      </span>
-    ))
-  }
-
   const handleThresholdChange = (event, newValue) => {
     setTimeThreshold(newValue)
   }
@@ -201,15 +148,10 @@ const NlPlayPage = () => {
           accept="application/json"
           onChange={handleFileUpload}
         />{' '}
-        <StyledEditorWrapper>
-          <LineNumbers>{renderLineNumbers(replayCode)}</LineNumbers>
-          <Editor
+        <StyledTextareaWrapper>
+          <textarea
             value={replayCode}
-            onValueChange={() => {}}
-            highlight={(code) =>
-              Prism.highlight(code, Prism.languages.javascript, 'javascript')
-            }
-            padding={10}
+            onChange={() => {}}
             style={{
               fontFamily: 'Inconsolata, monospace',
               fontSize: 16,
@@ -218,13 +160,14 @@ const NlPlayPage = () => {
               border: `1px solid ${isReplaying ? 'red' : '#ccc'}`,
               backgroundColor: isReplaying ? '#f0f0f0' : 'transparent',
               lineHeight: '1.5em',
+              color: 'black',
+              width: '100%',
+              resize: 'none',
             }}
             readOnly
             placeholder="ここに再生"
-            textareaId="codeArea"
-            preClassName="language-javascript"
           />
-        </StyledEditorWrapper>
+        </StyledTextareaWrapper>
         <Box sx={{ width: 300, mt: 2 }}>
           <Typography gutterBottom>再生速度: {playbackSpeed}x</Typography>
           <Slider
