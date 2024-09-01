@@ -2,11 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 
 import { Button, Box, Typography } from '@mui/material'
 import { styled } from '@mui/system'
-import Editor from 'react-simple-code-editor'
 
-import { Metadata, navigate } from '@redwoodjs/web'
+import { Metadata } from '@redwoodjs/web'
 
-const StyledEditorWrapper = styled('div')(({ theme }) => ({
+const StyledTextareaWrapper = styled('div')(({ theme }) => ({
   width: '90%',
   margin: '10px auto',
   display: 'flex',
@@ -15,11 +14,6 @@ const StyledEditorWrapper = styled('div')(({ theme }) => ({
   border: `1px solid ${theme.palette.grey[400]}`,
   fontFamily: '"Fira code", "Fira Mono", monospace',
   fontSize: '16px',
-  '& pre': {
-    margin: 0,
-    padding: '10px',
-    background: 'transparent',
-  },
   maxHeight: '300px',
   overflow: 'auto',
   position: 'relative',
@@ -33,10 +27,8 @@ const ButtonContainer = styled(Box)(({ theme }) => ({
 
 const NlPage = () => {
   const [inputLog, setInputLog] = useState([])
-  const [startTime, setStartTime] = useState(null)
   const [timeLeft, setTimeLeft] = useState(360)
   const [code, setCode] = useState('')
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [isRunning, setRun] = useState(false)
 
   const timerRef = useRef(null)
@@ -47,7 +39,6 @@ const NlPage = () => {
     setRun(true)
     setCode('')
     setInputLog([])
-    setStartTime(Date.now())
     setTimeLeft(360)
 
     const interval = setInterval(() => {
@@ -63,8 +54,9 @@ const NlPage = () => {
     timerRef.current = interval
   }
 
-  const handleInput = (value) => {
+  const handleInput = (event) => {
     const currentTime = Date.now()
+    const value = event.target.value
     setCode(value)
     setInputLog((prevInputLog) => [
       ...prevInputLog,
@@ -87,10 +79,6 @@ const NlPage = () => {
     }
   }
 
-  const handleSpeedChange = (event) => {
-    setPlaybackSpeed(event.target.value)
-  }
-
   const handleDownloadJson = () => {
     const blob = new Blob([JSON.stringify(inputLog, null, 2)], {
       type: 'application/json',
@@ -108,7 +96,6 @@ const NlPage = () => {
       clearInterval(timerRef.current)
     }
   }, [])
-  const lines = code.split('\n').length
 
   return (
     <>
@@ -123,23 +110,20 @@ const NlPage = () => {
         <Typography variant="h5" mt={2}>
           （自然言語）
         </Typography>
-        <StyledEditorWrapper lines={lines}>
-          <Editor
+        <StyledTextareaWrapper>
+          <textarea
             value={code}
-            onValueChange={handleInput}
-            highlight={(code) => code}
-            padding={10}
+            onChange={handleInput}
             style={{
               fontFamily: '"Fira code", "Fira Mono", monospace',
               fontSize: 16,
               flexGrow: 1,
               minHeight: '200px',
-              marginLeft: `${String(lines).length + 2}ch`,
               border: 'none',
             }}
             placeholder="ここに入力"
           />
-        </StyledEditorWrapper>
+        </StyledTextareaWrapper>
         <ButtonContainer>
           <Button
             variant="contained"
