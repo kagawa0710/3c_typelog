@@ -58,9 +58,14 @@ const CodePage = () => {
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [highlightThreshold, setHighlightThreshold] = useState(3000)
   const [highlightLines, setHighlightLines] = useState(false)
+  const [isRunning, setRun] = useState(false)
+
   const timerRef = useRef(null)
 
   const handleClick = () => {
+    if (isRunning) return
+    setRun(true)
+
     setCode('')
     setInputLog([])
     setStartTime(Date.now())
@@ -92,6 +97,7 @@ const CodePage = () => {
   }
 
   const handleStop = () => {
+    setRun(false)
     clearInterval(timerRef.current)
     alert('制限時間になったか、終了ボタンが押されました！')
     const shouldDownload = window.confirm(
@@ -178,7 +184,7 @@ const CodePage = () => {
           />
         </StyledEditorWrapper>
         <ButtonContainer>
-          <Button variant="contained" color="primary" onClick={handleClick}>
+          <Button variant="contained" color="primary" onClick={handleClick} disabled={isRunning}>
             開始
           </Button>
           <Button variant="contained" color="secondary" onClick={handleStop}>
